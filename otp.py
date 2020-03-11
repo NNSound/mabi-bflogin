@@ -117,6 +117,16 @@ class BeanfunLogin(object):
 
 if __name__ == "__main__":
     
+    with open('./config.json') as f:
+        setting = json.load(f)
+    
+    delayTime = 10
+    if (not setting.__contains__('delayTime')):
+        print("設定檔錯誤，使用預設值")
+        logging.warning("設定檔錯誤")
+    else:
+        delayTime = setting['delayTime']
+
     with open('./accountsInfo.json') as f:
         accountsInfos = json.load(f)
 
@@ -128,4 +138,4 @@ if __name__ == "__main__":
         command = 'Client.exe code:1622 ver:298 logip:210.208.80.6 logport:11000 chatip:210.208.80.10 chatport:8004 setting:\"file://data/features.xml=Regular, Taiwan\" /N:%s /V:%s /T:gamania'%(model.sacc, otp)
         subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
         print("end")
-        time.sleep(10)
+        time.sleep(delayTime)
