@@ -124,7 +124,7 @@ if __name__ == "__main__":
     if (not setting.__contains__('delayTime')):
         print("設定檔錯誤，使用預設值")
         logging.warning("設定檔錯誤")
-    else
+    else:
         delayTime = setting['delayTime']
 
     with open('./accountsInfo.json') as f:
