@@ -121,21 +121,23 @@ if __name__ == "__main__":
         setting = json.load(f)
     
     delayTime = 10
-    if (not setting.__contains__('delayTime')):
+    cmd = 'Client.exe code:1622 ver:298 logip:210.208.80.6 logport:11000 chatip:210.208.80.10 chatport:8004 setting:\"file://data/features.xml=Regular, Taiwan\" /N:%s /V:%s /T:gamania'
+    if (not setting.__contains__('delayTime') or not setting.__contains__('cmd')):
         print("設定檔錯誤，使用預設值")
         logging.warning("設定檔錯誤")
     else:
         delayTime = setting['delayTime']
+        cmd = setting['cmd']
 
     with open('./accountsInfo.json') as f:
         accountsInfos = json.load(f)
 
     for account in accountsInfos:
-        print(account['user'], account['pass'])
+        print(account['user'])
         
         model = BeanfunLogin(account['user'], account['pass'])
         otp = model.getOTP()
-        command = 'Client.exe code:1622 ver:298 logip:210.208.80.6 logport:11000 chatip:210.208.80.10 chatport:8004 setting:\"file://data/features.xml=Regular, Taiwan\" /N:%s /V:%s /T:gamania'%(model.sacc, otp)
+        command = cmd%(model.sacc, otp)
         subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
         print("end")
         time.sleep(delayTime)
