@@ -11,7 +11,9 @@ import os
 
 class BeanfunLogin(object):
 
-    def __init__(self, account, passwd):
+    def __init__(self, account, passwd, index = 0):
+        logging.basicConfig(level=logging.INFO,format='[%(asctime)s][%(levelname)-4s] %(message)s',
+                    datefmt='%m-%d %H:%M:%S', handlers = [logging.FileHandler('./otp.log', 'a+', 'utf-8'),])
 
         self.account = account
         self.passwd = passwd
@@ -20,6 +22,7 @@ class BeanfunLogin(object):
         self.start = time.time()
         self.skey = None
         self.sacc = None
+        self.index = index
 
     def getSessionkey(self):
         logging.info('get Session key')
@@ -63,13 +66,21 @@ class BeanfunLogin(object):
     def getAccounts(self):
         logging.info('getAccounts')
 
+        index = self.index
+
         self.webtoken = self.login()
         url = "https://tw.beanfun.com/beanfun_block/auth.aspx?channel=game_zone&page_and_query=game_start.aspx%3Fservice_code_and_region%3D600309_A2&web_token=" + self.webtoken
         res = self.session.get(url)
         regex = re.findall("<div id=\"(\\w+)\" sn=\"(\\d+)\" name=\"([^\"]+)\"", res.text)
-        sacc = regex[0][0]
-        sotp = regex[0][1]
-        sname = regex[0][2]
+        if (len(regex) <= index):
+            msg = "第 %d 個帳號不存在"%(index)
+            logging.error(msg)
+            print(msg)
+            return False
+
+        sacc = regex[index][0]
+        sotp = regex[index][1]
+        sname = regex[index][2]
         self.sacc = sacc
         return {"sacc":sacc, "sotp":sotp, "sname":sname}
         
@@ -77,6 +88,8 @@ class BeanfunLogin(object):
         logging.info('getOTP')
 
         acc = self.getAccounts()
+        if (not acc):
+            return False
         now = datetime.now()
         dt = now.strftime('%Y%m%d%H%M%S')
         url = "https://tw.beanfun.com/beanfun_block/game_zone/game_start_step2.aspx?service_code=600309&service_region=A2&sotp=%s&dt=%s"%(acc['sotp'], dt)
@@ -117,27 +130,40 @@ class BeanfunLogin(object):
 
 if __name__ == "__main__":
     
-    with open('./config.json') as f:
-        setting = json.load(f)
-    
-    delayTime = 10
-    cmd = 'Client.exe code:1622 ver:298 logip:210.208.80.6 logport:11000 chatip:210.208.80.10 chatport:8004 setting:\"file://data/features.xml=Regular, Taiwan\" /N:%s /V:%s /T:gamania'
-    if (not setting.__contains__('delayTime') or not setting.__contains__('cmd')):
-        print("設定檔錯誤，使用預設值")
-        logging.warning("設定檔錯誤")
-    else:
-        delayTime = setting['delayTime']
-        cmd = setting['cmd']
-
-    with open('./accountsInfo.json') as f:
-        accountsInfos = json.load(f)
-
-    for account in accountsInfos:
-        print(account['user'])
+    try:
+        with open('./config.json') as f:
+            setting = json.load(f)
         
-        model = BeanfunLogin(account['user'], account['pass'])
-        otp = model.getOTP()
-        command = cmd%(model.sacc, otp)
-        subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
-        print("end")
-        time.sleep(delayTime)
+        delayTime = 10
+        cmd = 'Client.exe code:1622 ver:298 logip:210.208.80.6 logport:11000 chatip:210.208.80.10 chatport:8004 setting:\"file://data/features.xml=Regular, Taiwan\" /N:%s /V:%s /T:gamania'
+        if (not setting.__contains__('delayTime') or not setting.__contains__('cmd')):
+            print("設定檔錯誤，使用預設值")
+            logging.warning("設定檔錯誤")
+        else:
+            delayTime = setting['delayTime']
+            cmd = setting['cmd']
+
+        with open('./accountsInfo.json', encoding = 'utf8') as f:
+            accountsInfos = json.load(f)
+
+        for account in accountsInfos:
+            print(account['user'])
+            index = 0
+            if (account.__contains__('index')):
+                index = account['index']
+            
+            model = BeanfunLogin(account['user'], account['pass'], index)
+            otp = model.getOTP()
+            if (not otp):
+                msg = "帳號:%s, index:%s 啟動失敗"%(account['user'], index)
+                print(msg)
+                logging.warning(msg)
+                continue
+            command = cmd%(model.sacc, otp)
+            subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
+            print("end")
+            time.sleep(delayTime)
+
+    except Exception as e:
+        logging.error(str(e))
+# --uac-admin
