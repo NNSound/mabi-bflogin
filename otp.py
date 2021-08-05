@@ -44,8 +44,8 @@ class BeanfunLogin(object):
         viewstate = re.findall("id=\"__VIEWSTATE\" value=\"(.*)\" />", res)[0]
         eventvalidation = re.findall("id=\"__EVENTVALIDATION\" value=\"(.*)\" />", res)[0]
         viewstateGenerator = re.findall("id=\"__VIEWSTATEGENERATOR\" value=\"(.*)\" />", res)[0]
-        samplecaptcha = re.findall("id=\"LBD_VCID_c_login_idpass_form_samplecaptcha\" value=\"(.*)\" />", res)[0]
-        payload = {"__EVENTTARGET":"", "__EVENTARGUMENT":"", "__VIEWSTATE":viewstate, "__VIEWSTATEGENERATOR":viewstateGenerator, "__EVENTVALIDATION":eventvalidation, "t_AccountID":self.account, "t_Password":self.passwd, "CodeTextBox":"", "btn_login":"登入", "LBD_VCID_c_login_idpass_form_samplecaptcha":samplecaptcha}
+        # samplecaptcha = re.findall("id=\"LBD_VCID_c_login_idpass_form_samplecaptcha\" value=\"(.*)\" />", res)[0]
+        payload = {"__EVENTTARGET":"", "__EVENTARGUMENT":"", "__VIEWSTATE":viewstate, "__VIEWSTATEGENERATOR":viewstateGenerator, "__EVENTVALIDATION":eventvalidation, "t_AccountID":self.account, "t_Password":self.passwd, "CodeTextBox":"", "btn_login":"登入"}
         res = self.session.post("https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey=" + self.skey, data = payload)
         akey = re.findall("akey=(.*)", res.url)
         return akey
